@@ -14,7 +14,12 @@ export class BooksController {
         throw new BadRequestException('Search query cannot be empty');
       }
       
-      return await this.booksService.searchBooks(searchQuery.q);
+      return await this.booksService.searchBooks(
+        searchQuery.q,
+        searchQuery.orderBy,
+        searchQuery.startIndex,
+        searchQuery.maxResults
+      );
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;

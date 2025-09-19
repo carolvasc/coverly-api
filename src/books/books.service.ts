@@ -7,14 +7,21 @@ export class BooksService {
   private readonly logger = new Logger(BooksService.name);
   private readonly googleBooksApiUrl = 'https://www.googleapis.com/books/v1/volumes';
 
-  async searchBooks(query: string): Promise<BookSearchResponseDto> {
+  async searchBooks(
+    query: string, 
+    orderBy: 'relevance' | 'newest' = 'relevance',
+    startIndex: number = 0,
+    maxResults: number = 10
+  ): Promise<BookSearchResponseDto> {
     try {
-      this.logger.log(`Searching books with query: ${query}`);
+      this.logger.log(`Searching books with query: ${query}, orderBy: ${orderBy}, startIndex: ${startIndex}, maxResults: ${maxResults}`);
       
       const response = await axios.get(this.googleBooksApiUrl, {
         params: {
           q: query,
-          maxResults: 10,
+          orderBy,
+          startIndex,
+          maxResults: Math.min(maxResults, 40), // Google Books API limit
         },
         timeout: 5000,
       });
