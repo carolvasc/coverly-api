@@ -27,4 +27,13 @@ export class BooksController {
       throw new InternalServerErrorException('Failed to search books');
     }
   }
+
+  @Get('cover')
+  async getCover(@Query('url') url: string): Promise<{ dataUrl: string }> {
+    const { contentType, base64 } = await this.booksService.fetchCoverImage(url);
+
+    return {
+      dataUrl: `data:${contentType};base64,${base64}`,
+    };
+  }
 }

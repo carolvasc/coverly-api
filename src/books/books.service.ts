@@ -1,4 +1,4 @@
-import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, Logger, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
 import { Agent as HttpsAgent } from 'https';
 import { BookDto, BookSearchResponseDto } from './dto/book.dto';
@@ -79,6 +79,48 @@ export class BooksService {
       }
 
       throw new InternalServerErrorException('Failed to search books');
+    }
+  }
+
+  async fetchCoverImage(url: string): Promise<{ contentType: string; base64: string }> {
+    if (!url) {
+      throw new BadRequestException('Cover URL is required');
+    }
+
+    let parsedUrl: URL;
+
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      throw new BadRequestException('Invalid cover URL');
+    }
+
+    const isGoogleBooksHost = parsedUrl.host === 'books.google.com';
+    const isGoogleUserContent = parsedUrl.host.endsWith('.googleusercontent.com');
+
+    if (!isGoogleBooksHost && !isGoogleUserContent) {
+      throw new BadRequestException('Cover host is not allowed');
+    }
+
+    try {
+      const response = await axios.get<ArrayBuffer>(url, {
+        httpsAgent: this.httpsAgent,
+        responseType: 'arraybuffer',
+        timeout: 5000,
+      });
+
+      const contentType = response.headers['content-type'] || 'image/jpeg';
+      const base64 = Buffer.from(response.data).toString('base64');
+
+      return { contentType, base64 };
+    } catch (error) {
+      this.logger.error('Failed to fetch cover image', error instanceof Error ? error.stack : undefined);
+
+      if (error instanceof AxiosError && error.response?.status === 404) {
+        throw new BadRequestException('Cover not found');
+      }
+
+      throw new InternalServerErrorException('Failed to fetch cover image');
     }
   }
 }
