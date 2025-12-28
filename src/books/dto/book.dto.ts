@@ -7,6 +7,7 @@ export class BookDto {
   pageCount: number;
   description?: string;
   thumbnail?: string;
+  categories?: string[];
 }
 
 export class BookSearchResponseDto {

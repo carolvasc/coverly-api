@@ -47,6 +47,7 @@ export class BooksService {
         pageCount: item.volumeInfo.pageCount || 0,
         description: item.volumeInfo.description,
         thumbnail: item.volumeInfo.imageLinks?.thumbnail,
+        categories: item.volumeInfo.categories || [],
       }));
 
       this.logger.log(`Found ${books.length} books`);
