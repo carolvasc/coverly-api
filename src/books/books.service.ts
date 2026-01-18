@@ -96,6 +96,10 @@ export class BooksService {
       throw new BadRequestException('Invalid cover URL');
     }
 
+    if (parsedUrl.protocol !== 'https:') {
+      throw new BadRequestException('Cover URL must use HTTPS');
+    }
+
     const isGoogleBooksHost = parsedUrl.host === 'books.google.com';
     const isGoogleUserContent = parsedUrl.host.endsWith('.googleusercontent.com');
 
@@ -111,11 +115,20 @@ export class BooksService {
       });
 
       const contentType = response.headers['content-type'] || 'image/jpeg';
+
+      if (!contentType.startsWith('image/')) {
+        throw new BadRequestException('Cover response is not an image');
+      }
+
       const base64 = Buffer.from(response.data).toString('base64');
 
       return { contentType, base64 };
     } catch (error) {
       this.logger.error('Failed to fetch cover image', error instanceof Error ? error.stack : undefined);
+
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
 
       if (error instanceof AxiosError && error.response?.status === 404) {
         throw new BadRequestException('Cover not found');
