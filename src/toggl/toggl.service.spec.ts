@@ -2,7 +2,18 @@ import { InternalServerErrorException, UnauthorizedException } from '@nestjs/com
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { TogglService } from './toggl.service';
 
-jest.mock('axios');
+jest.mock('axios', () => {
+  const actual = jest.requireActual('axios');
+
+  return {
+    __esModule: true,
+    ...actual,
+    default: {
+      ...actual.default,
+      get: jest.fn(),
+    },
+  };
+});
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
